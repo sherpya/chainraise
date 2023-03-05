@@ -1,0 +1,27 @@
+{
+  "name": "@sherpya/chainraise",
+  "version": "1.0.0",
+  "description": "Crowdfunding campaigns on blockchain",
+  "scripts": {
+    "test": "hardhat test",
+    "check": "solhint contracts/*.sol contracts/**/*.sol"
+  },
+  "keywords": [
+    "crowdfunding",
+    "solidity"
+  ],
+  "author": "Gianluigi Tiesi <sherpya@gmail.com>",
+  "license": "MIT",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.8",
+    "@nomicfoundation/hardhat-toolbox": "^2.0.2",
+    "@openzeppelin/contracts": "^4.8.2",
+    "dotenv": "^16.0.3",
+    "hardhat": "^2.13.0",
+    "hardhat-deploy": "^0.11.24",
+    "hardhat-gas-reporter": "^1.0.9",
+    "mocha": "^10.2.0",
+    "solhint": "^3.4.0",
+    "typescript": "^4.9.5"
+  }
+}

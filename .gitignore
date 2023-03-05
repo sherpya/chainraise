@@ -1,0 +1,21 @@
+node_modules
+.env
+coverage
+coverage.json
+typechain
+typechain-types
+
+# Hardhat files
+abi
+cache
+artifacts
+
+# deployments
+deployments
+
+# OpenZeppelin
+.openzeppelin/unknown-*.json
+
+# misc
+*.log
+*.diff

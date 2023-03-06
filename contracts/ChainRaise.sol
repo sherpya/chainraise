@@ -36,14 +36,14 @@ contract ChainRaise {
     Campaign[] public campaigns;
 
     event CampaignCreated(
-        uint256 campaignId,
-        address creator,
-        address token,
+        uint256 indexed campaignId,
+        address indexed creator,
+        address indexed token,
         uint256 goal,
         uint256 deadline,
         string metadata
     );
-    event FundTransfer(address backer, uint256 amount, bool isContribution);
+    event FundTransfer(address indexed backer, uint256 amount, bool isContribution);
 
     function createCampaign(
         address _token,

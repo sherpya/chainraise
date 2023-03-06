@@ -36,9 +36,9 @@ contract ChainRaise {
     Campaign[] public campaigns;
 
     event CampaignCreated(
-        uint256 indexed campaignId,
         address indexed creator,
         address indexed token,
+        uint256 indexed campaignId,
         uint256 goal,
         uint256 deadline,
         string metadata
@@ -76,7 +76,7 @@ contract ChainRaise {
                 metadata: _metadata
             })
         );
-        emit CampaignCreated(campaignId, msg.sender, _token, _goal, _deadline, _metadata);
+        emit CampaignCreated(msg.sender, _token, campaignId, _goal, _deadline, _metadata);
     }
 
     function fund(uint256 campaignId, uint256 amount) external {

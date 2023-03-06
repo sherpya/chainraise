@@ -50,6 +50,6 @@ describe('ChainRaise: createCampaign', function () {
 
     await expect(chainraise.connect(creator).createCampaign(usdt.address, 10, deadline, '42'))
       .to.emit(chainraise, 'CampaignCreated')
-      .withArgs(anyUint, creator.address, usdt.address, 10, deadline, '42');
+      .withArgs(creator.address, usdt.address, anyUint, 10, deadline, '42');
   });
 });

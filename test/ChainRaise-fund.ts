@@ -27,7 +27,7 @@ describe('ChainRaise: fund', function () {
 
     await expect(chainraise.connect(creator).createCampaign(usdt.address, amount, deadline, '42'))
       .to.emit(chainraise, 'CampaignCreated')
-      .withArgs(anyUint, creator.address, usdt.address, amount, deadline, '42');
+      .withArgs(creator.address, usdt.address, anyUint, amount, deadline, '42');
 
     const events = await chainraise.queryFilter(chainraise.filters.CampaignCreated(), blockNumber);
     expect(events).to.be.an('array').that.lengthOf(1);

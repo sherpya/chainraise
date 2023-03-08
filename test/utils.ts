@@ -21,7 +21,7 @@ export async function createCampaign(
     const { chainraise, usdt } = await getContracts();
 
     const blockNumber = await ethers.provider.getBlockNumber();
-    expect(await chainraise.connect(creator).createCampaign(usdt.address, amount, deadline, metadata))
+    await expect(chainraise.connect(creator).createCampaign(usdt.address, amount, deadline, metadata))
         .to.emit(chainraise, 'CampaignCreated')
         .withArgs(creator.address, usdt.address, anyUint, amount, deadline, metadata);
 

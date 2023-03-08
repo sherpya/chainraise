@@ -16,8 +16,7 @@ describe('ChainRaise: reimburse', function () {
     const { chainraise, usdt } = await getContracts();
     const [, creator, funder] = await ethers.getSigners();
 
-    const decimals = await usdt.decimals();
-    const amount = ethers.utils.parseUnits('10.0', decimals);
+    const amount = ethers.utils.parseUnits('10.0', await usdt.decimals());
     const now = await time.latest();
     const deadline = BigNumber.from(now + (24 * 60));
     const campaignId = await createCampaign(creator, amount, deadline);

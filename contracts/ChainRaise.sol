@@ -45,6 +45,7 @@ contract ChainRaise {
         uint256 deadline,
         string metadata
     );
+
     event FundTransfer(address indexed backer, uint256 amount, bool isContribution);
 
     function createCampaign(

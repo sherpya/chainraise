@@ -48,7 +48,7 @@ describe('ChainRaise: createCampaign', function () {
     const { chainraise, usdt, creator, now } = await loadFixture(deployFixture);
     const deadline = now + 60;
 
-    await expect(chainraise.connect(creator).createCampaign(usdt.address, 10, deadline, '42'))
+    expect(await chainraise.connect(creator).createCampaign(usdt.address, 10, deadline, '42'))
       .to.emit(chainraise, 'CampaignCreated')
       .withArgs(creator.address, usdt.address, anyUint, 10, deadline, '42');
   });

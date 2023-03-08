@@ -25,7 +25,7 @@ describe('ChainRaise: fund', function () {
     const amount = 10;
     const blockNumber = await ethers.provider.getBlockNumber();
 
-    await expect(chainraise.connect(creator).createCampaign(usdt.address, amount, deadline, '42'))
+    expect(await chainraise.connect(creator).createCampaign(usdt.address, amount, deadline, '42'))
       .to.emit(chainraise, 'CampaignCreated')
       .withArgs(creator.address, usdt.address, anyUint, amount, deadline, '42');
 
@@ -64,7 +64,7 @@ describe('ChainRaise: fund', function () {
     await usdt.connect(funder).claim(amount);
     await usdt.connect(funder).approve(chainraise.address, amount);
 
-    await expect(chainraise.connect(funder).fund(campaignId, amount))
+    expect(await chainraise.connect(funder).fund(campaignId, amount))
       .to.emit(chainraise, 'FundTransfer').withArgs(funder.address, amount, true);
 
     // ERC20: insufficient allowance

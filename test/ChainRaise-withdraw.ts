@@ -25,7 +25,7 @@ describe('ChainRaise: withdraw', function () {
     const amount = 10;
     const blockNumber = await ethers.provider.getBlockNumber();
 
-    await expect(chainraise.connect(creator).createCampaign(usdt.address, amount, deadline, '42'))
+    expect(await chainraise.connect(creator).createCampaign(usdt.address, amount, deadline, '42'))
       .to.emit(chainraise, 'CampaignCreated')
       .withArgs(creator.address, usdt.address, anyUint, amount, deadline, '42');
 
@@ -47,7 +47,7 @@ describe('ChainRaise: withdraw', function () {
       await usdt.connect(funder).claim(amount);
       await usdt.connect(funder).approve(chainraise.address, amount);
 
-      await expect(chainraise.connect(funder).fund(campaignId, 1))
+      expect(await chainraise.connect(funder).fund(campaignId, 1))
         .to.emit(chainraise, 'FundTransfer').withArgs(funder.address, 1, true);
     }
     return { chainraise, usdt, campaignId, amount };
@@ -68,7 +68,7 @@ describe('ChainRaise: withdraw', function () {
     await usdt.connect(funder).claim(amount);
     await usdt.connect(funder).approve(chainraise.address, amount);
 
-    await expect(chainraise.connect(funder).fund(campaignId, 1))
+    expect(await chainraise.connect(funder).fund(campaignId, 1))
       .to.emit(chainraise, 'FundTransfer').withArgs(funder.address, 1, true);
 
     await expect(chainraise.connect(funder).withdraw(campaignId))
@@ -82,10 +82,10 @@ describe('ChainRaise: withdraw', function () {
     await usdt.connect(funder).claim(amount);
     await usdt.connect(funder).approve(chainraise.address, amount);
 
-    await expect(chainraise.connect(funder).fund(campaignId, 1))
+    expect(await chainraise.connect(funder).fund(campaignId, 1))
       .to.emit(chainraise, 'FundTransfer').withArgs(funder.address, 1, true);
 
-    await expect(chainraise.connect(creator).withdraw(campaignId))
+    expect(await chainraise.connect(creator).withdraw(campaignId))
       .to.emit(chainraise, 'FundTransfer').withArgs(creator.address, amount, false);
 
     await expect(chainraise.connect(creator).withdraw(campaignId))

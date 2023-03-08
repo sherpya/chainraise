@@ -1,6 +1,8 @@
 import { HardhatUserConfig } from "hardhat/config";
 import { HARDHAT_NETWORK_MNEMONIC } from 'hardhat/internal/core/config/default-config';
-import "@nomicfoundation/hardhat-toolbox";
+import '@nomicfoundation/hardhat-toolbox';
+import '@nomiclabs/hardhat-etherscan';
+import '@nomiclabs/hardhat-ethers';
 import 'hardhat-gas-reporter';
 import 'hardhat-deploy';
 

@@ -1,28 +1,22 @@
 import { expect } from 'chai';
 import { deployments, ethers } from 'hardhat';
+import { time } from '@nomicfoundation/hardhat-network-helpers';
 import { anyUint } from '@nomicfoundation/hardhat-chai-matchers/withArgs';
-import { loadFixture, time } from '@nomicfoundation/hardhat-network-helpers';
+
+import { getContracts } from './utils';
 
 describe('ChainRaise: createCampaign', function () {
-  async function deployFixture() {
+  before(async () => {
     await deployments.fixture(['ChainRaise', 'TetherToken'], {
       keepExistingDeployments: true
     });
-
-    const [, creator] = await ethers.getSigners();
-
-    let deployment = await deployments.get('ChainRaise');
-    const chainraise = await ethers.getContractAt('ChainRaise', deployment.address);
-
-    deployment = await deployments.get('TetherToken');
-    const usdt = await ethers.getContractAt('TetherToken', deployment.address);
-
-    const now = await time.latest();
-    return { chainraise, usdt, creator, now };
-  }
+  });
 
   it('InvalidToken', async function () {
-    const { chainraise, creator, now } = await loadFixture(deployFixture);
+    const { chainraise } = await getContracts();
+    const [, creator] = await ethers.getSigners();
+
+    const now = await time.latest();
     const deadline = now + 60;
 
     await expect(chainraise.connect(creator).createCampaign(ethers.constants.AddressZero, 10, deadline, ''))
@@ -30,7 +24,10 @@ describe('ChainRaise: createCampaign', function () {
   });
 
   it('InvalidAmount', async function () {
-    const { chainraise, usdt, creator, now } = await loadFixture(deployFixture);
+    const { chainraise, usdt } = await getContracts();
+    const [, creator] = await ethers.getSigners();
+
+    const now = await time.latest();
     const deadline = now + 60;
 
     await expect(chainraise.connect(creator).createCampaign(usdt.address, 0, deadline, ''))
@@ -38,14 +35,20 @@ describe('ChainRaise: createCampaign', function () {
   });
 
   it('DeadlineInThePast', async function () {
-    const { chainraise, usdt, creator, now } = await loadFixture(deployFixture);
+    const { chainraise, usdt } = await getContracts();
+    const [, creator] = await ethers.getSigners();
+
+    const now = await time.latest();
 
     await expect(chainraise.connect(creator).createCampaign(usdt.address, 10, now, ''))
       .to.be.revertedWithCustomError(chainraise, 'DeadlineInThePast');
   });
 
   it('CampaignCreated', async function () {
-    const { chainraise, usdt, creator, now } = await loadFixture(deployFixture);
+    const { chainraise, usdt } = await getContracts();
+    const [, creator] = await ethers.getSigners();
+
+    const now = await time.latest();
     const deadline = now + 60;
 
     expect(await chainraise.connect(creator).createCampaign(usdt.address, 10, deadline, '42'))

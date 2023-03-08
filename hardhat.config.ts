@@ -60,7 +60,7 @@ const config: HardhatUserConfig = {
       accounts: {
         mnemonic: process.env.HARDHAT_MNEMONIC || HARDHAT_NETWORK_MNEMONIC
       },
-      deploy: ['hardhat-deploy']
+      deploy: ['deploy', 'deploy/hardhat']
     }
   }
 };

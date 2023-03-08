@@ -19,6 +19,7 @@ error DeadlineInThePast();
 error DeadlineReached(uint256 deadline);
 error GoalNotReached(uint256 required);
 error AlreadyClosed();
+error NotFunder();
 
 contract ChainRaise {
     using SafeCast for uint256;
@@ -31,6 +32,7 @@ contract ChainRaise {
         uint256 goal;
         uint256 raisedAmount;
         string metadata;
+        mapping(address => uint256) balances;
     }
 
     Campaign[] public campaigns;
@@ -65,17 +67,13 @@ contract ChainRaise {
 
         campaignId = campaigns.length;
 
-        campaigns.push(
-            Campaign({
-                creator: payable(msg.sender),
-                token: IERC20(_token),
-                deadline: _deadline.toUint32(),
-                closed: false,
-                goal: _goal,
-                raisedAmount: 0,
-                metadata: _metadata
-            })
-        );
+        Campaign storage campaign = campaigns.push();
+        campaign.creator = payable(msg.sender);
+        campaign.token = IERC20(_token);
+        campaign.deadline = _deadline.toUint32();
+        campaign.goal = _goal;
+        campaign.metadata = _metadata;
+
         emit CampaignCreated(msg.sender, _token, campaignId, _goal, _deadline, _metadata);
     }
 
@@ -89,10 +87,33 @@ contract ChainRaise {
             revert InvalidAmount();
         }
 
-        campaign.token.transferFrom(msg.sender, address(this), amount);
         campaign.raisedAmount += amount;
+        campaign.balances[msg.sender] += amount;
+
+        campaign.token.transferFrom(msg.sender, address(this), amount);
 
         emit FundTransfer(msg.sender, amount, true);
+    }
+
+    function reimburse(uint256 campaignId) external {
+        Campaign storage campaign = campaigns[campaignId];
+
+        if (campaign.closed) {
+            revert AlreadyClosed();
+        }
+
+        uint256 amount = campaign.balances[msg.sender];
+
+        if (amount == 0) {
+            revert NotFunder();
+        }
+
+        campaign.raisedAmount -= amount;
+        campaign.balances[msg.sender] -= amount;
+
+        campaign.token.transfer(msg.sender, amount);
+
+        emit FundTransfer(msg.sender, amount, false);
     }
 
     function withdraw(uint256 campaignId) external {

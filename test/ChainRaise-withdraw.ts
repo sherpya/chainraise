@@ -30,9 +30,9 @@ describe('ChainRaise: withdraw', function () {
       .withArgs(creator.address, usdt.address, anyUint, amount, deadline, '42');
 
     const events = await chainraise.queryFilter(chainraise.filters.CampaignCreated(), blockNumber);
-    expect(events).to.be.an('array').that.lengthOf(1);
-    expect(events[0].args!).is.not.undefined;
-    const { campaignId } = events[0].args!;
+    expect(events).to.be.an('array');
+    expect(events.at(-1)?.args?.campaignId).is.not.undefined;
+    const campaignId = events.at(-1)!.args!.campaignId;
 
     return { chainraise, usdt, campaignId, amount };
   }

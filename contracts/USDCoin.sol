@@ -8,12 +8,8 @@ pragma solidity ^0.8.19;
  * @author Gianluigi Tiesi <sherpya@gmail.com>
  */
 
-import {ERC20} from "@openzeppelin/contracts/token/ERC20/ERC20.sol";
+import {ClaimableToken} from "./ClaimableToken.sol";
 
-contract USDCoin is ERC20 {
-    constructor() ERC20("USD Coin Like", "USDC") {}
-
-    function claim(uint256 amount) external {
-        _mint(msg.sender, amount);
-    }
+contract USDCoin is ClaimableToken {
+    constructor() ClaimableToken("USD Coin Like", "USDC") {}
 }

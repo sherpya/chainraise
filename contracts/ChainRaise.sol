@@ -48,6 +48,8 @@ contract ChainRaise {
 
     event FundTransfer(address indexed backer, uint256 amount, bool isContribution);
 
+    fallback() external {}
+
     function createCampaign(
         address _token,
         uint256 _goal,

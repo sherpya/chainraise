@@ -4,7 +4,8 @@
   "description": "Crowdfunding campaigns on blockchain",
   "scripts": {
     "test": "hardhat test",
-    "solhint": "solhint contracts/*.sol"
+    "solhint": "solhint contracts/*.sol",
+    "storage": "sol2uml storage contracts,node_modules/@openzeppelin/contracts -c ChainRaise"
   },
   "keywords": [
     "crowdfunding",
@@ -28,6 +29,7 @@
     "hardhat": "^2.14.1",
     "hardhat-deploy": "^0.11.30",
     "hardhat-gas-reporter": "^1.0.9",
+    "sol2uml": "^2.5.4",
     "solhint": "^3.4.1",
     "solidity-coverage": "^0.8.2",
     "ts-node": "^10.9.1",

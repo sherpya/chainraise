@@ -48,7 +48,7 @@ contract ChainRaise {
         string metadata
     );
 
-    event FundTransfer(address indexed backer, uint256 amount, bool isContribution);
+    event FundTransfer(address indexed backer, uint256 amount, bool indexed isContribution);
 
     function _requireValidCampaign(uint256 _campaignID) internal view {
         if (campaigns[_campaignID].creator == address(0)) {
@@ -126,7 +126,7 @@ contract ChainRaise {
         }
 
         campaign.raisedAmount -= amount;
-        campaign.balances[msg.sender] -= amount;
+        campaign.balances[msg.sender] = 0;
 
         campaign.token.transfer(msg.sender, amount);
 

@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.4;
 
 /**
  * Created on 2023-03-05
@@ -47,8 +47,6 @@ contract ChainRaise {
     );
 
     event FundTransfer(address indexed backer, uint256 amount, bool isContribution);
-
-    fallback() external {}
 
     function createCampaign(
         address _token,

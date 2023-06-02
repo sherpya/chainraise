@@ -13,6 +13,17 @@ describe('ChainRaise: fund', function () {
     });
   });
 
+  it('InvalidCampaign', async function () {
+    const { chainraise } = await getContracts();
+    const [, , funder] = await ethers.getSigners();
+
+    const amount = BigNumber.from(10);
+    const campaignId = BigNumber.from(0);
+
+    await expect(chainraise.connect(funder).fund(campaignId, amount))
+      .to.be.revertedWithCustomError(chainraise, 'InvalidCampaign');
+  });
+
   it('ERC20: insufficient allowance', async function () {
     const { chainraise } = await getContracts();
     const [, creator, funder] = await ethers.getSigners();

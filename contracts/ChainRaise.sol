@@ -15,6 +15,7 @@ import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 contract ChainRaise {
     using SafeCast for uint256;
 
+    error InvalidCampaign();
     error InvalidCaller(address required);
     error InvalidToken();
     error InvalidAmount();
@@ -35,7 +36,8 @@ contract ChainRaise {
         mapping(address => uint256) balances;
     }
 
-    Campaign[] public campaigns;
+    uint256 public lastCampaign;
+    mapping(uint256 => Campaign) campaigns;
 
     event CampaignCreated(
         address indexed creator,
@@ -48,11 +50,22 @@ contract ChainRaise {
 
     event FundTransfer(address indexed backer, uint256 amount, bool isContribution);
 
+    function _requireValidCampaign(uint256 _campaignID) internal view {
+        if (campaigns[_campaignID].creator == address(0)) {
+            revert InvalidCampaign();
+        }
+    }
+
+    modifier onlyValidCampaign(uint256 _campaignID) {
+        _requireValidCampaign(_campaignID);
+        _;
+    }
+
     function createCampaign(
         address _token,
         uint256 _goal,
         uint256 _deadline,
-        string memory _metadata
+        string calldata _metadata
     ) external returns (uint256 campaignId) {
         if (_token == address(0)) {
             revert InvalidToken();
@@ -66,9 +79,11 @@ contract ChainRaise {
             revert DeadlineInThePast();
         }
 
-        campaignId = campaigns.length;
+        unchecked {
+            campaignId = ++lastCampaign;
+        }
 
-        Campaign storage campaign = campaigns.push();
+        Campaign storage campaign = campaigns[campaignId];
         campaign.creator = payable(msg.sender);
         campaign.token = IERC20(_token);
         campaign.deadline = _deadline.toUint32();
@@ -78,8 +93,9 @@ contract ChainRaise {
         emit CampaignCreated(msg.sender, _token, campaignId, _goal, _deadline, _metadata);
     }
 
-    function fund(uint256 campaignId, uint256 amount) external {
+    function fund(uint256 campaignId, uint256 amount) external onlyValidCampaign(campaignId) {
         Campaign storage campaign = campaigns[campaignId];
+
         if (block.timestamp > campaign.deadline) {
             revert DeadlineReached(campaign.deadline);
         }
@@ -96,7 +112,7 @@ contract ChainRaise {
         emit FundTransfer(msg.sender, amount, true);
     }
 
-    function reimburse(uint256 campaignId) external {
+    function reimburse(uint256 campaignId) external onlyValidCampaign(campaignId) {
         Campaign storage campaign = campaigns[campaignId];
 
         if (campaign.closed) {
@@ -117,7 +133,7 @@ contract ChainRaise {
         emit FundTransfer(msg.sender, amount, false);
     }
 
-    function withdraw(uint256 campaignId) external {
+    function withdraw(uint256 campaignId) external onlyValidCampaign(campaignId) {
         Campaign storage campaign = campaigns[campaignId];
 
         if (campaign.closed) {
@@ -138,5 +154,41 @@ contract ChainRaise {
         campaign.token.transfer(campaign.creator, amount);
 
         emit FundTransfer(campaign.creator, amount, false);
+    }
+
+    function getCampaign(
+        uint256 campaignId
+    )
+        external
+        view
+        onlyValidCampaign(campaignId)
+        returns (
+            address payable creator,
+            IERC20 token,
+            uint32 deadline,
+            bool closed,
+            uint256 goal,
+            uint256 raisedAmount,
+            string memory metadata
+        )
+    {
+        Campaign storage campaign = campaigns[campaignId];
+        return (
+            campaign.creator,
+            campaign.token,
+            campaign.deadline,
+            campaign.closed,
+            campaign.goal,
+            campaign.raisedAmount,
+            campaign.metadata
+        );
+    }
+
+    function getCampaignBalance(
+        uint256 campaignId,
+        address funder
+    ) external view onlyValidCampaign(campaignId) returns (uint256) {
+        Campaign storage campaign = campaigns[campaignId];
+        return campaign.balances[funder];
     }
 }

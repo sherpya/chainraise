@@ -12,17 +12,17 @@ pragma solidity ^0.8.4;
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
 
-error InvalidCaller(address required);
-error InvalidToken();
-error InvalidAmount();
-error DeadlineInThePast();
-error DeadlineReached(uint256 deadline);
-error GoalNotReached(uint256 required);
-error AlreadyClosed();
-error NotFunder();
-
 contract ChainRaise {
     using SafeCast for uint256;
+
+    error InvalidCaller(address required);
+    error InvalidToken();
+    error InvalidAmount();
+    error DeadlineInThePast();
+    error DeadlineReached(uint256 deadline);
+    error GoalNotReached(uint256 required);
+    error AlreadyClosed();
+    error NotFunder();
 
     struct Campaign {
         address payable creator;

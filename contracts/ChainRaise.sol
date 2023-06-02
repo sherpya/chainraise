@@ -33,11 +33,11 @@ contract ChainRaise {
         uint256 goal;
         uint256 raisedAmount;
         string metadata;
-        mapping(address => uint256) balances;
     }
 
     uint256 public lastCampaign;
-    mapping(uint256 => Campaign) campaigns;
+    mapping(uint256 => Campaign) private campaigns;
+    mapping(uint256 => mapping(address => uint256)) private contributions;
 
     event CampaignCreated(
         address indexed creator,
@@ -105,7 +105,7 @@ contract ChainRaise {
         }
 
         campaign.raisedAmount += amount;
-        campaign.balances[msg.sender] += amount;
+        contributions[campaignId][msg.sender] += amount;
 
         campaign.token.transferFrom(msg.sender, address(this), amount);
 
@@ -119,14 +119,14 @@ contract ChainRaise {
             revert AlreadyClosed();
         }
 
-        uint256 amount = campaign.balances[msg.sender];
+        uint256 amount = contributions[campaignId][msg.sender];
 
         if (amount == 0) {
             revert NotFunder();
         }
 
         campaign.raisedAmount -= amount;
-        campaign.balances[msg.sender] = 0;
+        contributions[campaignId][msg.sender] = 0;
 
         campaign.token.transfer(msg.sender, amount);
 
@@ -156,39 +156,11 @@ contract ChainRaise {
         emit FundTransfer(campaign.creator, amount, false);
     }
 
-    function getCampaign(
-        uint256 campaignId
-    )
-        external
-        view
-        onlyValidCampaign(campaignId)
-        returns (
-            address payable creator,
-            IERC20 token,
-            uint32 deadline,
-            bool closed,
-            uint256 goal,
-            uint256 raisedAmount,
-            string memory metadata
-        )
-    {
-        Campaign storage campaign = campaigns[campaignId];
-        return (
-            campaign.creator,
-            campaign.token,
-            campaign.deadline,
-            campaign.closed,
-            campaign.goal,
-            campaign.raisedAmount,
-            campaign.metadata
-        );
+    function getCampaign(uint256 campaignId) external view onlyValidCampaign(campaignId) returns (Campaign memory) {
+        return campaigns[campaignId];
     }
 
-    function getCampaignBalance(
-        uint256 campaignId,
-        address funder
-    ) external view onlyValidCampaign(campaignId) returns (uint256) {
-        Campaign storage campaign = campaigns[campaignId];
-        return campaign.balances[funder];
+    function contribution(uint256 campaignId, address funder) external view onlyValidCampaign(campaignId) returns (uint256) {
+        return contributions[campaignId][funder];
     }
 }

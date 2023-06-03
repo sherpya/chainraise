@@ -8,8 +8,8 @@ pragma solidity ^0.8.4;
  * @author Gianluigi Tiesi <sherpya@gmail.com>
  */
 
-import {ClaimableToken} from "./ClaimableToken.sol";
+import {MintableToken} from "./MintableToken.sol";
 
-contract TetherToken is ClaimableToken {
-    constructor() ClaimableToken("Tether USD Like", "USDT") {}
+contract TetherToken is MintableToken {
+    constructor() MintableToken("Tether USD Like", "USDT") {}
 }

@@ -25,7 +25,7 @@ describe('ChainRaise: withdraw', function () {
 
     for (let i = 0; i < count - 1; i++) {
       const funder = funders[i % funders.length];
-      await usdt.connect(funder).claim(step);
+      await usdt.connect(funder).mint(step);
 
       await usdt.connect(funder).approve(chainraise.address, step);
       await expect(chainraise.connect(funder).fund(campaignId, step))
@@ -57,7 +57,7 @@ describe('ChainRaise: withdraw', function () {
     const step = ethers.utils.parseUnits('1.0', decimals);
     const campaignId = await fund(amount, step);
 
-    await usdt.connect(funder).claim(amount);
+    await usdt.connect(funder).mint(amount);
 
     await usdt.connect(funder).approve(chainraise.address, amount);
     await expect(chainraise.connect(funder).fund(campaignId, 1))

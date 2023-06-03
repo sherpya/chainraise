@@ -21,7 +21,7 @@ describe('ChainRaise: reimburse', function () {
     const deadline = BigNumber.from(now + (24 * 60));
     const campaignId = await createCampaign(creator, amount, deadline);
 
-    await usdt.connect(funder).claim(amount);
+    await usdt.connect(funder).mint(amount);
 
     await usdt.connect(funder).approve(chainraise.address, amount);
     await expect(chainraise.connect(funder).fund(campaignId, amount))

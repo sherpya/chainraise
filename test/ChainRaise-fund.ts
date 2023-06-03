@@ -51,7 +51,7 @@ describe('ChainRaise: fund', function () {
     const campaignId = await createCampaign(creator, amount, deadline);
 
     // fund the funder
-    await usdt.connect(funder).claim(amount);
+    await usdt.connect(funder).mint(amount);
 
     await time.increase(24 * 60);
 
@@ -72,7 +72,7 @@ describe('ChainRaise: fund', function () {
     const campaignId = await createCampaign(creator, amount, deadline);
 
     // fund the funder
-    await usdt.connect(funder).claim(amount);
+    await usdt.connect(funder).mint(amount);
 
     await usdt.connect(funder).approve(chainraise.address, amount);
     await expect(chainraise.connect(funder).fund(campaignId, amount))

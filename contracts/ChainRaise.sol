@@ -50,32 +50,32 @@ contract ChainRaise {
 
     event FundTransfer(address indexed backer, uint256 amount, bool indexed isContribution);
 
-    function _requireValidCampaign(uint256 _campaignID) internal view {
-        if (campaigns[_campaignID].creator == address(0)) {
+    function _requireValidCampaign(uint256 campaignID) internal view {
+        if (campaigns[campaignID].creator == address(0)) {
             revert InvalidCampaign();
         }
     }
 
-    modifier onlyValidCampaign(uint256 _campaignID) {
-        _requireValidCampaign(_campaignID);
+    modifier onlyValidCampaign(uint256 campaignID) {
+        _requireValidCampaign(campaignID);
         _;
     }
 
     function createCampaign(
-        address _token,
-        uint256 _goal,
-        uint256 _deadline,
-        string calldata _metadata
+        address token,
+        uint256 goal,
+        uint256 deadline,
+        string calldata metadata
     ) external returns (uint256 campaignId) {
-        if (_token == address(0)) {
+        if (token == address(0)) {
             revert InvalidToken();
         }
 
-        if (_goal == 0) {
+        if (goal == 0) {
             revert InvalidAmount();
         }
 
-        if (_deadline <= block.timestamp) {
+        if (deadline <= block.timestamp) {
             revert DeadlineInThePast();
         }
 
@@ -85,12 +85,12 @@ contract ChainRaise {
 
         Campaign storage campaign = campaigns[campaignId];
         campaign.creator = payable(msg.sender);
-        campaign.token = IERC20(_token);
-        campaign.deadline = _deadline.toUint32();
-        campaign.goal = _goal;
-        campaign.metadata = _metadata;
+        campaign.token = IERC20(token);
+        campaign.deadline = deadline.toUint32();
+        campaign.goal = goal;
+        campaign.metadata = metadata;
 
-        emit CampaignCreated(msg.sender, _token, campaignId, _goal, _deadline, _metadata);
+        emit CampaignCreated(msg.sender, token, campaignId, goal, deadline, metadata);
     }
 
     function fund(uint256 campaignId, uint256 amount) external onlyValidCampaign(campaignId) {

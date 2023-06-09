@@ -1,9 +1,11 @@
 import { expect } from 'chai';
+import { ZeroAddress } from 'ethers';
 import { deployments, ethers } from 'hardhat';
 import { time } from '@nomicfoundation/hardhat-network-helpers';
 import { anyUint } from '@nomicfoundation/hardhat-chai-matchers/withArgs';
 
 import { getContracts } from './utils';
+
 
 describe('ChainRaise: createCampaign', function () {
   before(async () => {
@@ -19,7 +21,7 @@ describe('ChainRaise: createCampaign', function () {
     const now = await time.latest();
     const deadline = now + 60;
 
-    await expect(chainraise.connect(creator).createCampaign(ethers.constants.AddressZero, 1, deadline, ''))
+    await expect(chainraise.connect(creator).createCampaign(ZeroAddress, 1, deadline, ''))
       .to.be.revertedWithCustomError(chainraise, 'InvalidToken');
   });
 
@@ -30,7 +32,7 @@ describe('ChainRaise: createCampaign', function () {
     const now = await time.latest();
     const deadline = now + 60;
 
-    await expect(chainraise.connect(creator).createCampaign(usdt.address, 0, deadline, ''))
+    await expect(chainraise.connect(creator).createCampaign(await usdt.getAddress(), 0, deadline, ''))
       .to.be.revertedWithCustomError(chainraise, 'InvalidAmount');
   });
 
@@ -40,7 +42,7 @@ describe('ChainRaise: createCampaign', function () {
 
     const now = await time.latest();
 
-    await expect(chainraise.connect(creator).createCampaign(usdt.address, 1, now, ''))
+    await expect(chainraise.connect(creator).createCampaign(await usdt.getAddress(), 1, now, ''))
       .to.be.revertedWithCustomError(chainraise, 'DeadlineInThePast');
   });
 
@@ -51,8 +53,10 @@ describe('ChainRaise: createCampaign', function () {
     const now = await time.latest();
     const deadline = now + 60;
 
-    await expect(chainraise.connect(creator).createCampaign(usdt.address, 1, deadline, '42'))
+    const usdtAddress = await usdt.getAddress();
+
+    await expect(chainraise.connect(creator).createCampaign(usdtAddress, 1, deadline, '42'))
       .to.emit(chainraise, 'CampaignCreated')
-      .withArgs(creator.address, usdt.address, anyUint, 1, deadline, '42');
+      .withArgs(creator.address, usdtAddress, anyUint, 1, deadline, '42');
   });
 });

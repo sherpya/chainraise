@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { BigNumber } from 'ethers';
+import { parseUnits } from 'ethers';
 import { deployments, ethers } from 'hardhat';
 import { time } from '@nomicfoundation/hardhat-network-helpers';
 
@@ -16,18 +16,18 @@ describe('ChainRaise: reimburse', function () {
     const { chainraise, usdt } = await getContracts();
     const [, creator, funder] = await ethers.getSigners();
 
-    const amount = ethers.utils.parseUnits('10.0', await usdt.decimals());
+    const amount = parseUnits('10.0', await usdt.decimals());
     const now = await time.latest();
-    const deadline = BigNumber.from(now + (24 * 60));
+    const deadline = BigInt(now + (24 * 60));
     const campaignId = await createCampaign(creator, amount, deadline);
 
     await usdt.connect(funder).mint(amount);
 
-    await usdt.connect(funder).approve(chainraise.address, amount);
+    await usdt.connect(funder).approve(await chainraise.getAddress(), amount);
     await expect(chainraise.connect(funder).fund(campaignId, amount))
       .changeTokenBalances(usdt,
         [chainraise, funder],
-        [amount, amount.mul(-1)]
+        [amount, -amount]
       )
       .to.emit(chainraise, 'FundTransfer').withArgs(funder.address, amount, true);
     return { campaignId, amount };
@@ -66,7 +66,7 @@ describe('ChainRaise: reimburse', function () {
     await expect(chainraise.connect(funder).reimburse(campaignId))
       .changeTokenBalances(usdt,
         [chainraise, funder],
-        [amount.mul(-1), amount])
+        [-amount, amount])
       .to.emit(chainraise, 'FundTransfer')
       .withArgs(funder.address, amount, false);
   });

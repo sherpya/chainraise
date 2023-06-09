@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { parseEther } from 'ethers/lib/utils';
+import { parseEther } from 'ethers';
 import { deployments, ethers } from 'hardhat';
 
 import { getContracts } from './utils';
@@ -18,7 +18,7 @@ describe('ChainRaise: fallback', function () {
     const amount = parseEther('1.0');
 
     await expect(deployer.sendTransaction({
-      to: chainraise.address,
+      to: await chainraise.getAddress(),
       value: amount
     })).to.be.revertedWithoutReason();
   });

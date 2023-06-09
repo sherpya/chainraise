@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { BigNumber } from 'ethers';
+import { parseUnits } from 'ethers';
 import { deployments, ethers } from 'hardhat';
 import { time } from '@nomicfoundation/hardhat-network-helpers';
 
@@ -12,22 +12,22 @@ describe('ChainRaise: withdraw', function () {
     });
   });
 
-  async function fund(amount: BigNumber, step: BigNumber) {
+  async function fund(amount: bigint, step: bigint) {
     const { chainraise, usdt } = await getContracts();
     const [, creator] = await ethers.getSigners();
     const funders = (await ethers.getSigners()).splice(2);
 
     const now = await time.latest();
-    const deadline = BigNumber.from(now + (24 * 60));
-    const campaignId = await createCampaign(creator, BigNumber.from(amount), deadline);
+    const deadline = BigInt(now + (24 * 60));
+    const campaignId = await createCampaign(creator, amount, deadline);
 
-    const count = Math.floor(amount.div(step).toNumber());
+    const count = Number(amount / step);
 
     for (let i = 0; i < count - 1; i++) {
       const funder = funders[i % funders.length];
       await usdt.connect(funder).mint(step);
 
-      await usdt.connect(funder).approve(chainraise.address, step);
+      await usdt.connect(funder).approve(await chainraise.getAddress(), step);
       await expect(chainraise.connect(funder).fund(campaignId, step))
         .to.emit(chainraise, 'FundTransfer').withArgs(funder.address, step, true);
     }
@@ -40,8 +40,8 @@ describe('ChainRaise: withdraw', function () {
     const [, creator] = await ethers.getSigners();
 
     const decimals = await usdt.decimals();
-    const amount = ethers.utils.parseUnits('10.0', decimals);
-    const step = ethers.utils.parseUnits('1.0', decimals);
+    const amount = parseUnits('10.0', decimals);
+    const step = parseUnits('1.0', decimals);
     const campaignId = await fund(amount, step);
 
     await expect(chainraise.connect(creator).withdraw(campaignId))
@@ -53,13 +53,13 @@ describe('ChainRaise: withdraw', function () {
     const [, creator, funder] = await ethers.getSigners();
 
     const decimals = await usdt.decimals();
-    const amount = ethers.utils.parseUnits('20.0', decimals);
-    const step = ethers.utils.parseUnits('1.0', decimals);
+    const amount = parseUnits('20.0', decimals);
+    const step = parseUnits('1.0', decimals);
     const campaignId = await fund(amount, step);
 
     await usdt.connect(funder).mint(amount);
 
-    await usdt.connect(funder).approve(chainraise.address, amount);
+    await usdt.connect(funder).approve(await chainraise.getAddress(), amount);
     await expect(chainraise.connect(funder).fund(campaignId, 1))
       .to.emit(chainraise, 'FundTransfer').withArgs(funder.address, 1, true);
 
@@ -72,11 +72,11 @@ describe('ChainRaise: withdraw', function () {
     const [, creator, funder] = await ethers.getSigners();
 
     const decimals = await usdt.decimals();
-    const amount = ethers.utils.parseUnits('10.0', decimals);
-    const step = ethers.utils.parseUnits('1.0', decimals);
+    const amount = parseUnits('10.0', decimals);
+    const step = parseUnits('1.0', decimals);
     const campaignId = await fund(amount, step);
 
-    await usdt.connect(funder).approve(chainraise.address, step);
+    await usdt.connect(funder).approve(await chainraise.getAddress(), step);
     await expect(chainraise.connect(funder).fund(campaignId, step))
       .to.emit(chainraise, 'FundTransfer').withArgs(funder.address, step, true);
 

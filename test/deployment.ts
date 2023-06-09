@@ -4,6 +4,6 @@ import { ethers } from 'hardhat';
     it('ChainRaise', async () => {
         const ChainRaise = await ethers.getContractFactory('ChainRaise');
         const chainRaise = await ChainRaise.deploy();
-        await chainRaise.deployed();
+        await chainRaise.waitForDeployment();
     });
 });

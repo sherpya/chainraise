@@ -1,29 +1,36 @@
 import { expect } from 'chai';
-import { BigNumber } from 'ethers';
-import { ethers } from 'hardhat';
+import { deployments, ethers } from 'hardhat';
 import { anyUint } from '@nomicfoundation/hardhat-chai-matchers/withArgs';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
+import { BaseContract, Signer } from 'ethers';
 
 import { ChainRaise, TetherToken } from '../typechain-types';
 
+export async function getContract<T extends BaseContract>(contractName: string, signer?: Signer): Promise<T> {
+    const deployment = await deployments.get(contractName);
+    const contract = await ethers.getContractAt(contractName, deployment.address, signer);
+    return contract as unknown as T;
+}
+
 export async function getContracts() {
-    const chainraise: ChainRaise = await ethers.getContract('ChainRaise');
-    const usdt: TetherToken = await ethers.getContract('TetherToken');
+    const chainraise: ChainRaise = await getContract('ChainRaise');
+    const usdt: TetherToken = await getContract('TetherToken');
     return { chainraise, usdt };
 }
 
 export async function createCampaign(
     creator: SignerWithAddress,
-    amount: BigNumber,
-    deadline: BigNumber,
+    amount: bigint,
+    deadline: bigint,
     metadata = '42') {
 
     const { chainraise, usdt } = await getContracts();
+    const usdtAddress = await usdt.getAddress();
 
     const blockNumber = await ethers.provider.getBlockNumber();
-    await expect(chainraise.connect(creator).createCampaign(usdt.address, amount, deadline, metadata))
+    await expect(chainraise.connect(creator).createCampaign(usdtAddress, amount, deadline, metadata))
         .to.emit(chainraise, 'CampaignCreated')
-        .withArgs(creator.address, usdt.address, anyUint, amount, deadline, metadata);
+        .withArgs(creator.address, usdtAddress, anyUint, amount, deadline, metadata);
 
     const events = await chainraise.queryFilter(chainraise.filters.CampaignCreated(), blockNumber);
     expect(events).to.be.an('array');

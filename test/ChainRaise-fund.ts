@@ -1,5 +1,5 @@
 import { expect } from 'chai';
-import { BigNumber } from 'ethers';
+import { parseUnits } from 'ethers';
 import { deployments, ethers } from 'hardhat';
 import { anyUint } from '@nomicfoundation/hardhat-chai-matchers/withArgs';
 import { time } from '@nomicfoundation/hardhat-network-helpers';
@@ -14,24 +14,24 @@ describe('ChainRaise: fund', function () {
   });
 
   it('InvalidCampaign', async function () {
-    const { chainraise } = await getContracts();
+    const { chainraise, usdt } = await getContracts();
     const [, , funder] = await ethers.getSigners();
 
-    const amount = BigNumber.from(10);
-    const campaignId = BigNumber.from(0);
+    const amount = parseUnits('10.0', await usdt.decimals());
+    const campaignId = 0n;
 
     await expect(chainraise.connect(funder).fund(campaignId, amount))
       .to.be.revertedWithCustomError(chainraise, 'InvalidCampaign');
   });
 
   it('ERC20: insufficient allowance', async function () {
-    const { chainraise } = await getContracts();
+    const { chainraise, usdt } = await getContracts();
     const [, creator, funder] = await ethers.getSigners();
 
     const now = await time.latest();
 
-    const deadline = BigNumber.from(now + (24 * 60));
-    const amount = BigNumber.from(10);
+    const deadline = BigInt(now + (24 * 60));
+    const amount = parseUnits('10.0', await usdt.decimals());
 
     const campaignId = await createCampaign(creator, amount, deadline);
 
@@ -45,8 +45,8 @@ describe('ChainRaise: fund', function () {
 
     const now = await time.latest();
 
-    const deadline = BigNumber.from(now + (24 * 60));
-    const amount = BigNumber.from(10);
+    const deadline = BigInt(now + (24 * 60));
+    const amount = parseUnits('10.0', await usdt.decimals());
 
     const campaignId = await createCampaign(creator, amount, deadline);
 
@@ -55,7 +55,7 @@ describe('ChainRaise: fund', function () {
 
     await time.increase(24 * 60);
 
-    await usdt.connect(funder).approve(chainraise.address, amount);
+    await usdt.connect(funder).approve((await chainraise.getAddress()), amount);
     await expect(chainraise.connect(funder).fund(campaignId, amount))
       .to.be.revertedWithCustomError(chainraise, 'DeadlineReached').withArgs(anyUint);
   });
@@ -66,15 +66,15 @@ describe('ChainRaise: fund', function () {
 
     const now = await time.latest();
 
-    const deadline = BigNumber.from(now + (24 * 60));
-    const amount = ethers.utils.parseUnits('10.0', await usdt.decimals());
+    const deadline = BigInt(now + (24 * 60));
+    const amount = parseUnits('10.0', await usdt.decimals());
 
     const campaignId = await createCampaign(creator, amount, deadline);
 
     // fund the funder
     await usdt.connect(funder).mint(amount);
 
-    await usdt.connect(funder).approve(chainraise.address, amount);
+    await usdt.connect(funder).approve(await chainraise.getAddress(), amount);
     await expect(chainraise.connect(funder).fund(campaignId, amount))
       .to.emit(chainraise, 'FundTransfer').withArgs(funder.address, amount, true);
 

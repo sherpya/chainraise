@@ -32,7 +32,6 @@ contract ChainRaise {
         bool closed;
         uint256 goal;
         uint256 raisedAmount;
-        string metadata;
     }
 
     uint256 public lastCampaign;
@@ -44,8 +43,7 @@ contract ChainRaise {
         address indexed token,
         uint256 indexed campaignId,
         uint256 goal,
-        uint256 deadline,
-        string metadata
+        uint256 deadline
     );
 
     event FundTransfer(address indexed backer, uint256 amount, bool indexed isContribution);
@@ -65,7 +63,7 @@ contract ChainRaise {
         address token,
         uint256 goal,
         uint256 deadline,
-        string calldata metadata
+        bytes calldata /* description */
     ) external returns (uint256 campaignId) {
         if (token == address(0)) {
             revert InvalidToken();
@@ -88,9 +86,8 @@ contract ChainRaise {
         campaign.token = IERC20(token);
         campaign.deadline = deadline.toUint32();
         campaign.goal = goal;
-        campaign.metadata = metadata;
 
-        emit CampaignCreated(msg.sender, token, campaignId, goal, deadline, metadata);
+        emit CampaignCreated(msg.sender, token, campaignId, goal, deadline);
     }
 
     function fund(uint256 campaignId, uint256 amount) external onlyValidCampaign(campaignId) {
@@ -160,7 +157,10 @@ contract ChainRaise {
         return campaigns[campaignId];
     }
 
-    function contribution(uint256 campaignId, address funder) external view onlyValidCampaign(campaignId) returns (uint256) {
+    function contribution(
+        uint256 campaignId,
+        address funder
+    ) external view onlyValidCampaign(campaignId) returns (uint256) {
         return contributions[campaignId][funder];
     }
 }

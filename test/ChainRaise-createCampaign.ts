@@ -21,7 +21,8 @@ describe('ChainRaise: createCampaign', function () {
     const now = await time.latest();
     const deadline = now + 60;
 
-    await expect(chainraise.connect(creator).createCampaign(ZeroAddress, 1, deadline, ''))
+    await expect(chainraise.connect(creator)
+      .createCampaign(ZeroAddress, 1, deadline, Buffer.from('descrption')))
       .to.be.revertedWithCustomError(chainraise, 'InvalidToken');
   });
 
@@ -32,7 +33,8 @@ describe('ChainRaise: createCampaign', function () {
     const now = await time.latest();
     const deadline = now + 60;
 
-    await expect(chainraise.connect(creator).createCampaign(await usdt.getAddress(), 0, deadline, ''))
+    await expect(chainraise.connect(creator)
+      .createCampaign(await usdt.getAddress(), 0, deadline, Buffer.from('descrption')))
       .to.be.revertedWithCustomError(chainraise, 'InvalidAmount');
   });
 
@@ -42,7 +44,8 @@ describe('ChainRaise: createCampaign', function () {
 
     const now = await time.latest();
 
-    await expect(chainraise.connect(creator).createCampaign(await usdt.getAddress(), 1, now, ''))
+    await expect(chainraise.connect(creator)
+      .createCampaign(await usdt.getAddress(), 1, now, Buffer.from('descrption')))
       .to.be.revertedWithCustomError(chainraise, 'DeadlineInThePast');
   });
 
@@ -55,8 +58,9 @@ describe('ChainRaise: createCampaign', function () {
 
     const usdtAddress = await usdt.getAddress();
 
-    await expect(chainraise.connect(creator).createCampaign(usdtAddress, 1, deadline, '42'))
+    // FIXME: check for 42
+    await expect(chainraise.connect(creator).createCampaign(usdtAddress, 1, deadline, Buffer.from('42')))
       .to.emit(chainraise, 'CampaignCreated')
-      .withArgs(creator.address, usdtAddress, anyUint, 1, deadline, '42');
+      .withArgs(creator.address, usdtAddress, anyUint, 1, deadline);
   });
 });

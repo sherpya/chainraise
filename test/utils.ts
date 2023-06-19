@@ -22,15 +22,15 @@ export async function createCampaign(
     creator: SignerWithAddress,
     amount: bigint,
     deadline: bigint,
-    metadata = '42') {
+    description = Buffer.from('42')) {
 
     const { chainraise, usdt } = await getContracts();
     const usdtAddress = await usdt.getAddress();
 
     const blockNumber = await ethers.provider.getBlockNumber();
-    await expect(chainraise.connect(creator).createCampaign(usdtAddress, amount, deadline, metadata))
+    await expect(chainraise.connect(creator).createCampaign(usdtAddress, amount, deadline, description))
         .to.emit(chainraise, 'CampaignCreated')
-        .withArgs(creator.address, usdtAddress, anyUint, amount, deadline, metadata);
+        .withArgs(creator.address, usdtAddress, anyUint, amount, deadline);
 
     const events = await chainraise.queryFilter(chainraise.filters.CampaignCreated(), blockNumber);
     expect(events).to.be.an('array');

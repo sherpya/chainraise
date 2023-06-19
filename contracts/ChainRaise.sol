@@ -63,8 +63,10 @@ contract ChainRaise {
         address token,
         uint256 goal,
         uint256 deadline,
-        bytes calldata /* description */
+        bytes calldata description
     ) external returns (uint256 campaignId) {
+        description; // shut up warning
+
         if (token == address(0)) {
             revert InvalidToken();
         }

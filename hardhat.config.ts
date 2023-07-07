@@ -41,8 +41,8 @@ const config: HardhatUserConfig = {
     enabled: (process.env.REPORT_GAS) ? true : false,
     coinmarketcap: process.env.COINMARKETCAP_API_KEY,
     excludeContracts: ['TetherToken', 'USDCoin', 'ERC20'],
-    token: 'BNB',
-    gasPriceApi: bscGasApi
+    //token: 'BNB',
+    //gasPriceApi: bscGasApi
   },
   networks: {
     mainnet: {
@@ -61,19 +61,32 @@ const config: HardhatUserConfig = {
       accounts: {
         mnemonic: process.env.HARDHAT_MNEMONIC || HARDHAT_NETWORK_MNEMONIC
       },
-      deploy: ['deploy', 'deploy-testing']
+      deploy: ['deploy', 'deploy-tokens']
+    },
+    sepolia: {
+      url: 'https://rpc.sepolia.org',
+      accounts: process.env.PRIVATE_KEY ? [process.env.PRIVATE_KEY] : undefined,
+      deploy: ['deploy', 'deploy-tokens']
     },
     buildbear: {
       url: `https://rpc.buildbear.io/${BUILDBEAR_CONTAINER_NAME}`,
       accounts: {
         mnemonic: process.env.BUILDBEAR_MNEMONIC || HARDHAT_NETWORK_MNEMONIC
+      },
+      verify: {
+        etherscan: {
+          apiKey: 'verifyContract',
+          apiUrl: `https://rpc.buildbear.io/verify/etherscan/${BUILDBEAR_CONTAINER_NAME}`,
+        }
       }
+
     }
   },
   etherscan: {
     apiKey: {
       mainnet: process.env.BSCSCAN_API_KEY || '',
       testnet: process.env.BSCSCAN_API_KEY || '',
+      sepolia: process.env.ETHERSCAN_API_KEY || '',
       buildbear: 'verifyContract'
     },
     customChains: [

@@ -80,10 +80,14 @@ describe('ChainRaise: withdraw', function () {
     await expect(chainraise.connect(funder).fund(campaignId, step))
       .to.emit(chainraise, 'FundTransfer').withArgs(funder.address, step, true);
 
-    await expect(chainraise.connect(creator).withdraw(campaignId))
+    const tx = chainraise.connect(creator).withdraw(campaignId);
+
+    await expect(tx)
       .to.changeTokenBalances(usdt,
         [creator],
-        [amount])
+        [amount]);
+
+    await expect(tx)
       .to.emit(chainraise, 'FundTransfer').withArgs(creator.address, amount, false);
 
     await expect(chainraise.connect(creator).withdraw(campaignId))

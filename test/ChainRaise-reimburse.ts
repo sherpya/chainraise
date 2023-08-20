@@ -24,12 +24,18 @@ describe('ChainRaise: reimburse', function () {
     await usdt.connect(funder).mint(amount);
 
     await usdt.connect(funder).approve(await chainraise.getAddress(), amount);
-    await expect(chainraise.connect(funder).fund(campaignId, amount))
+
+    const tx = chainraise.connect(funder).fund(campaignId, amount);
+
+    await expect(tx)
       .changeTokenBalances(usdt,
         [chainraise, funder],
         [amount, -amount]
-      )
+      );
+
+    await expect(tx)
       .to.emit(chainraise, 'FundTransfer').withArgs(funder.address, amount, true);
+
     return { campaignId, amount };
   }
 
@@ -63,10 +69,14 @@ describe('ChainRaise: reimburse', function () {
 
     const { campaignId, amount } = await fund();
 
-    await expect(chainraise.connect(funder).reimburse(campaignId))
+    const tx = chainraise.connect(funder).reimburse(campaignId);
+
+    await expect(tx)
       .changeTokenBalances(usdt,
         [chainraise, funder],
-        [-amount, amount])
+        [-amount, amount]);
+
+    await expect(tx)
       .to.emit(chainraise, 'FundTransfer')
       .withArgs(funder.address, amount, false);
   });

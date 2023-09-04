@@ -19,11 +19,10 @@ describe('ChainRaise: reimburse', function () {
     const amount = parseUnits('10.0', await usdt.decimals());
     const now = await time.latest();
     const deadline = BigInt(now + (24 * 60));
-    const campaignId = await createCampaign(creator, amount, deadline);
+    const campaignId = await createCampaign(creator, usdt, amount, deadline);
 
     await usdt.connect(funder).mint(amount);
-
-    await usdt.connect(funder).approve(await chainraise.getAddress(), amount);
+    await usdt.connect(funder).increaseAllowance(await chainraise.getAddress(), amount);
 
     const tx = chainraise.connect(funder).fund(campaignId, amount);
 

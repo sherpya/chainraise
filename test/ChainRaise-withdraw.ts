@@ -19,7 +19,7 @@ describe('ChainRaise: withdraw', function () {
 
     const now = await time.latest();
     const deadline = BigInt(now + (24 * 60));
-    const campaignId = await createCampaign(creator, amount, deadline);
+    const campaignId = await createCampaign(creator, usdt, amount, deadline);
 
     const count = Number(amount / step);
 

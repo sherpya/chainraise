@@ -1,8 +1,7 @@
 import { expect } from 'chai';
 import { deployments, ethers } from 'hardhat';
-import { anyUint } from '@nomicfoundation/hardhat-chai-matchers/withArgs';
 import { SignerWithAddress } from '@nomicfoundation/hardhat-ethers/signers';
-import { BaseContract, Signer } from 'ethers';
+import { AddressLike, BaseContract, Signer, hexlify, resolveAddress, toUtf8Bytes } from 'ethers';
 
 import { ChainRaise, TetherToken } from '../typechain-types';
 
@@ -20,20 +19,28 @@ export async function getContracts() {
 
 export async function createCampaign(
     creator: SignerWithAddress,
-    amount: bigint,
+    token: AddressLike,
+    goal: bigint,
     deadline: bigint,
-    description = Buffer.from('42')) {
+    description = hexlify(toUtf8Bytes('42'))) {
 
-    const { chainraise, usdt } = await getContracts();
-    const usdtAddress = await usdt.getAddress();
+    const { chainraise } = await getContracts();
 
     const blockNumber = await ethers.provider.getBlockNumber();
-    await expect(chainraise.connect(creator).createCampaign(usdtAddress, amount, deadline, description))
-        .to.emit(chainraise, 'CampaignCreated')
-        .withArgs(creator.address, usdtAddress, anyUint, amount, deadline);
+    const campaignId = await chainraise.lastCampaign() + 1n;
 
-    const events = await chainraise.queryFilter(chainraise.filters.CampaignCreated(), blockNumber);
-    expect(events).to.be.an('array');
-    expect(events.at(-1)?.args?.campaignId).is.not.undefined;
-    return events.at(-1)!.args!.campaignId;
+    await expect(chainraise.connect(creator).createCampaign(token, goal, deadline, description))
+        .to.emit(chainraise, 'CampaignCreated')
+        .withArgs(creator.address, await resolveAddress(token), campaignId, goal, deadline);
+
+    const filter = chainraise.filters.CampaignCreated(undefined, undefined, campaignId, undefined, undefined);
+    const events = await chainraise.queryFilter(filter, blockNumber);
+    expect(events).to.be.an('array').to.have.length(1);
+
+    const tx = await events.at(0)!.getTransaction();
+    const fn = chainraise.interface.getFunction('createCampaign');
+    const data = chainraise.interface.decodeFunctionData(fn, tx.data);
+    expect(data.at(-1)).to.be.equal(description);
+
+    return campaignId;
 }

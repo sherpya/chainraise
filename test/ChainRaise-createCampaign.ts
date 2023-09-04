@@ -1,20 +1,19 @@
 import { expect } from 'chai';
-import { ZeroAddress } from 'ethers';
+import { ZeroAddress, parseUnits } from 'ethers';
 import { deployments, ethers } from 'hardhat';
 import { time } from '@nomicfoundation/hardhat-network-helpers';
-import { anyUint } from '@nomicfoundation/hardhat-chai-matchers/withArgs';
-
-import { getContracts } from './utils';
-
+import { createCampaign, getContracts } from './utils';
 
 describe('ChainRaise: createCampaign', function () {
+  const amount = parseUnits('1.0', 6);
+
   before(async () => {
     await deployments.fixture(['ChainRaise', 'TetherToken'], {
       keepExistingDeployments: true
     });
   });
 
-  it('InvalidToken', async function () {
+  it('InvalidAmount (native)', async function () {
     const { chainraise } = await getContracts();
     const [, creator] = await ethers.getSigners();
 
@@ -22,19 +21,19 @@ describe('ChainRaise: createCampaign', function () {
     const deadline = now + 60;
 
     await expect(chainraise.connect(creator)
-      .createCampaign(ZeroAddress, 1, deadline, Buffer.from('descrption')))
-      .to.be.revertedWithCustomError(chainraise, 'InvalidToken');
+      .createCampaign(ZeroAddress, 0, deadline, Buffer.from('description')))
+      .to.be.revertedWithCustomError(chainraise, 'InvalidAmount');
   });
 
-  it('InvalidAmount', async function () {
+  it('InvalidAmount (ERC20)', async function () {
     const { chainraise, usdt } = await getContracts();
     const [, creator] = await ethers.getSigners();
 
     const now = await time.latest();
-    const deadline = now + 60;
+    const deadline = BigInt(now + 60);
 
     await expect(chainraise.connect(creator)
-      .createCampaign(await usdt.getAddress(), 0, deadline, Buffer.from('descrption')))
+      .createCampaign(usdt, 0, deadline, Buffer.from('description')))
       .to.be.revertedWithCustomError(chainraise, 'InvalidAmount');
   });
 
@@ -45,22 +44,27 @@ describe('ChainRaise: createCampaign', function () {
     const now = await time.latest();
 
     await expect(chainraise.connect(creator)
-      .createCampaign(await usdt.getAddress(), 1, now, Buffer.from('descrption')))
+      .createCampaign(usdt, amount, now, Buffer.from('description')))
       .to.be.revertedWithCustomError(chainraise, 'DeadlineInThePast');
   });
 
-  it('CampaignCreated', async function () {
-    const { chainraise, usdt } = await getContracts();
+  it('CampaignCreated (native)', async function () {
     const [, creator] = await ethers.getSigners();
 
     const now = await time.latest();
-    const deadline = now + 60;
+    const deadline = BigInt(now + 60);
 
-    const usdtAddress = await usdt.getAddress();
+    await createCampaign(creator, ZeroAddress, amount, deadline);
+  });
 
-    // FIXME: check for 42
-    await expect(chainraise.connect(creator).createCampaign(usdtAddress, 1, deadline, Buffer.from('42')))
-      .to.emit(chainraise, 'CampaignCreated')
-      .withArgs(creator.address, usdtAddress, anyUint, 1, deadline);
+
+  it('CampaignCreated (ERC20)', async function () {
+    const { usdt } = await getContracts();
+    const [, creator] = await ethers.getSigners();
+
+    const now = await time.latest();
+    const deadline = BigInt(now + 60);
+
+    await createCampaign(creator, usdt, amount, deadline);
   });
 });

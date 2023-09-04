@@ -11,14 +11,19 @@ pragma solidity ^0.8.21;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
+import {ReentrancyGuard} from "@openzeppelin/contracts/security/ReentrancyGuard.sol";
 
-contract ChainRaise {
+import {SafeTransfer} from "./SafeTransfer.sol";
+
+contract ChainRaise is ReentrancyGuard {
     using SafeCast for uint256;
+    using SafeTransfer for IERC20;
 
     error InvalidCampaign();
     error InvalidCaller(address required);
     error InvalidToken();
     error InvalidAmount();
+    error TokenTransferFailed();
     error DeadlineInThePast();
     error DeadlineReached(uint256 deadline);
     error GoalNotReached(uint256 required);
@@ -40,7 +45,7 @@ contract ChainRaise {
 
     event CampaignCreated(
         address indexed creator,
-        address indexed token,
+        IERC20 indexed token,
         uint256 indexed campaignId,
         uint256 goal,
         uint256 deadline
@@ -60,16 +65,12 @@ contract ChainRaise {
     }
 
     function createCampaign(
-        address token,
+        IERC20 token,
         uint256 goal,
         uint256 deadline,
         bytes calldata description
     ) external returns (uint256 campaignId) {
         description; // shut up warning
-
-        if (token == address(0)) {
-            revert InvalidToken();
-        }
 
         if (goal == 0) {
             revert InvalidAmount();
@@ -85,14 +86,14 @@ contract ChainRaise {
 
         Campaign storage campaign = campaigns[campaignId];
         campaign.creator = payable(msg.sender);
-        campaign.token = IERC20(token);
+        campaign.token = token;
         campaign.deadline = deadline.toUint32();
         campaign.goal = goal;
 
         emit CampaignCreated(msg.sender, token, campaignId, goal, deadline);
     }
 
-    function fund(uint256 campaignId, uint256 amount) external onlyValidCampaign(campaignId) {
+    function fund(uint256 campaignId, uint256 amount) external payable nonReentrant onlyValidCampaign(campaignId) {
         Campaign storage campaign = campaigns[campaignId];
 
         if (block.timestamp > campaign.deadline) {
@@ -103,15 +104,30 @@ contract ChainRaise {
             revert InvalidAmount();
         }
 
+        if (campaign.token == SafeTransfer.NATIVE_TOKEN) {
+            // Native Token
+            if (msg.value != amount) {
+                revert InvalidAmount();
+            }
+        } else {
+            // ERC20
+            if (msg.value != 0) {
+                revert InvalidToken();
+            }
+            // first transfer tokens to the contract
+            // NOTE: user must have approved the allowance
+            if (!campaign.token.safeTransferFrom(msg.sender, address(this), amount)) {
+                revert TokenTransferFailed();
+            }
+        }
+
         campaign.raisedAmount += amount;
         contributions[campaignId][msg.sender] += amount;
-
-        campaign.token.transferFrom(msg.sender, address(this), amount);
 
         emit FundTransfer(msg.sender, amount, true);
     }
 
-    function reimburse(uint256 campaignId) external onlyValidCampaign(campaignId) {
+    function reimburse(uint256 campaignId) external nonReentrant onlyValidCampaign(campaignId) {
         Campaign storage campaign = campaigns[campaignId];
 
         if (campaign.closed) {
@@ -127,12 +143,12 @@ contract ChainRaise {
         campaign.raisedAmount -= amount;
         contributions[campaignId][msg.sender] = 0;
 
-        campaign.token.transfer(msg.sender, amount);
+        SafeTransfer.sendToken(msg.sender, campaign.token, amount, true);
 
         emit FundTransfer(msg.sender, amount, false);
     }
 
-    function withdraw(uint256 campaignId) external onlyValidCampaign(campaignId) {
+    function withdraw(uint256 campaignId) external nonReentrant onlyValidCampaign(campaignId) {
         Campaign storage campaign = campaigns[campaignId];
 
         if (campaign.closed) {
@@ -150,7 +166,7 @@ contract ChainRaise {
         campaign.closed = true;
 
         uint256 amount = campaign.raisedAmount;
-        campaign.token.transfer(campaign.creator, amount);
+        SafeTransfer.sendToken(campaign.creator, campaign.token, amount, true);
 
         emit FundTransfer(campaign.creator, amount, false);
     }

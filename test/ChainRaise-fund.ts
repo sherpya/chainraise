@@ -18,9 +18,8 @@ describe('ChainRaise: fund', function () {
     const [, , funder] = await ethers.getSigners();
 
     const amount = parseUnits('10.0', await usdt.decimals());
-    const campaignId = 0n;
 
-    await expect(chainraise.connect(funder).fund(campaignId, amount))
+    await expect(chainraise.connect(funder).fund(0, amount))
       .to.be.revertedWithCustomError(chainraise, 'InvalidCampaign');
   });
 
@@ -33,7 +32,7 @@ describe('ChainRaise: fund', function () {
     const deadline = BigInt(now + (24 * 60));
     const amount = parseUnits('10.0', await usdt.decimals());
 
-    const campaignId = await createCampaign(creator, amount, deadline);
+    const campaignId = await createCampaign(creator, usdt, amount, deadline);
 
     await expect(chainraise.connect(funder).fund(campaignId, amount))
       .to.be.revertedWith('ERC20: insufficient allowance');
@@ -48,14 +47,13 @@ describe('ChainRaise: fund', function () {
     const deadline = BigInt(now + (24 * 60));
     const amount = parseUnits('10.0', await usdt.decimals());
 
-    const campaignId = await createCampaign(creator, amount, deadline);
+    const campaignId = await createCampaign(creator, usdt, amount, deadline);
 
-    // fund the funder
     await usdt.connect(funder).mint(amount);
+    await usdt.connect(funder).increaseAllowance(chainraise, amount);
 
     await time.increase(24 * 60);
 
-    await usdt.connect(funder).approve((await chainraise.getAddress()), amount);
     await expect(chainraise.connect(funder).fund(campaignId, amount))
       .to.be.revertedWithCustomError(chainraise, 'DeadlineReached').withArgs(anyUint);
   });
@@ -69,17 +67,17 @@ describe('ChainRaise: fund', function () {
     const deadline = BigInt(now + (24 * 60));
     const amount = parseUnits('10.0', await usdt.decimals());
 
-    const campaignId = await createCampaign(creator, amount, deadline);
+    const campaignId = await createCampaign(creator, usdt, amount, deadline);
 
-    // fund the funder
     await usdt.connect(funder).mint(amount);
+    await usdt.connect(funder).increaseAllowance(chainraise, amount);
 
-    await usdt.connect(funder).approve(await chainraise.getAddress(), amount);
-    await expect(chainraise.connect(funder).fund(campaignId, amount))
-      .to.emit(chainraise, 'FundTransfer').withArgs(funder.address, amount, true);
-
-    // ERC20: insufficient allowance
-    await expect(chainraise.connect(funder).fund(campaignId, amount))
-      .to.be.rejectedWith('ERC20: insufficient allowance');
+    const tx = chainraise.connect(funder).fund(campaignId, amount);
+    await expect(tx).to.emit(chainraise, 'FundTransfer').withArgs(funder.address, amount, true);
+    await expect(tx).to.changeTokenBalances(
+      usdt,
+      [chainraise, funder],
+      [amount, -amount]
+    );
   });
 });

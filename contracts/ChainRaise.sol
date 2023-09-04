@@ -1,6 +1,4 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.4;
-
 /**
  * Created on 2023-03-05
  *
@@ -8,6 +6,8 @@ pragma solidity ^0.8.4;
  * @notice Smart contract to handle crowdfunding campaigns
  * @author Gianluigi Tiesi <sherpya@gmail.com>
  */
+
+pragma solidity ^0.8.21;
 
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeCast} from "@openzeppelin/contracts/utils/math/SafeCast.sol";
